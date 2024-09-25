@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "password-manager"
+version = "0.1.0"
+description = ""
+authors = ["Effi-S <effi.szt@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+cryptography = "^43.0.1"
+click = "^8.1.7"
+sqlalchemy = "^2.0.35"
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.27.0"
+isort = "^5.13.2"
+black = "^24.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+build_command = "pip install poetry && poetry build"
