@@ -31,3 +31,36 @@ class Database:
 
     def get_names(self) -> list[str]:
         return [x.description for x in self.session.query(Password).all()]
+
+    def update(
+        self,
+        description: str,
+        new_desc: str = None,
+        password: str = None,
+        username: str = None,
+    ):
+        if not any((new_desc, password, username)):
+            raise ValueError("Nothing was provided to Update")
+
+        item = (
+            self.session.query(Password)
+            .filter(Password.description == description)
+            .first()
+        )
+
+        if password:
+            item.encrypted_password = password
+        if username:
+            item.username = username
+        if new_desc:
+            item.description = new_desc
+        self.session.commit()
+
+    def delete(self, description: str):
+        for item in (
+            self.session.query(Password)
+            .filter(Password.description == description)
+            .all()
+        ):
+            self.session.delete(item)
+        self.session.commit()

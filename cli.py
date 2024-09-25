@@ -31,7 +31,7 @@ def check_key_file(ctx, param, value):
     return key
 
 
-def create_password(ctx, param, value):
+def create_password(ctx=None, param=None, value=None):
     if value:
         return value
     password = [
@@ -43,6 +43,20 @@ def create_password(ctx, param, value):
     password += [secrets.choice(CHARS) for _ in range(PASS_LENGTH - 4)]
 
     return "".join(password)
+
+
+def choose_description(db: Database = None):
+    """prompts the user to choose 1 of the items in the DB"""
+    db = db or Database()
+    names = db.get_names()
+    s = "\n  ".join(f"{i} - {name}" for i, name in enumerate(names))
+    choice = click.prompt(
+        f"Please choose:\n  {s}\n",
+        type=click.Choice(list(map(str, range(len(names)))), case_sensitive=False),
+    )
+    description = names[int(choice)]
+    click.echo(f"You selected: ({choice}) {description}")
+    return description
 
 
 @cli.command()
@@ -63,7 +77,6 @@ def create_password(ctx, param, value):
     "--username",
     prompt=False,
     default=None,
-    hide_input=True,
     help="What to call the password",
 )
 @click.option(
@@ -108,20 +121,67 @@ def view(key, description: Optional[str]):
     db = Database()
 
     if not description:
-        names = db.get_names()
-        s = "\n  ".join(f"{i} - {name}" for i, name in enumerate(names))
-        choice = click.prompt(
-            f"Please choose:\n  {s}\n",
-            type=click.Choice(list(map(str, range(len(names)))), case_sensitive=False),
-        )
-        description = names[int(choice)]
-        click.echo(f"You selected: ({choice}) {description}")
+        description = choose_description(db=db)
 
     entry = db.get(description=description)
     decrypted_pw = manager.decrypt(entry.encrypted_password)
     click.echo(
         f"Desc: {entry.description}\nUsername: {entry.username}\nPassword: {decrypted_pw}"
     )
+
+
+@cli.command()
+@click.option(
+    "--key",
+    prompt=False,
+    hide_input=True,
+    callback=check_key_file,
+    help="Master password key",
+)
+@click.option(
+    "--description",
+    required=False,
+    help="The name to update\nIf you want to Update the name itself, "
+    "first provide the name and then the updated name",
+)
+@click.option("--password", is_flag=True, prompt=False)
+@click.option("--username", prompt=False)
+def update(key: bytes, description: tuple[str], password: bool, username: str):
+    """Update an existing password"""
+    if not description:
+        description = choose_description()
+    # TODO: Allow description Update
+    # if n := len(description) > 2:
+    #     raise click.ClickException("--description excepts 1 or 2 values.")
+
+    # TODO: Allow user password
+    if password:
+        pm = PasswordManager(key=key)
+        password = pm.encrypt(create_password())
+
+    db = Database()
+    db.update(
+        description=description,
+        password=password,
+        new_desc=None,  # TODO
+        username=username,
+    )
+
+
+@cli.command()
+@click.option(
+    "--description",
+    required=False,
+    help="The name to delete",
+)
+def delete(description: Optional[str]):
+    description = description or choose_description()
+
+    db = Database()
+    db.delete(description)
+    names = db.get_names()
+    click.echo("Left:\n  ", nl=False)
+    click.echo("\n  ".join(f"({i}) - {name}" for i, name in enumerate(names)))
 
 
 if __name__ == "__main__":
