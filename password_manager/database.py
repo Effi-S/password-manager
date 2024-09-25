@@ -36,10 +36,10 @@ class Database:
         self,
         description: str,
         new_desc: str = None,
-        password: str = None,
+        encrypted_password: str = None,
         username: str = None,
     ):
-        if not any((new_desc, password, username)):
+        if not any((new_desc, encrypted_password, username)):
             raise ValueError("Nothing was provided to Update")
 
         item = (
@@ -48,8 +48,8 @@ class Database:
             .first()
         )
 
-        if password:
-            item.encrypted_password = password
+        if encrypted_password:
+            item.encrypted_password = encrypted_password
         if username:
             item.username = username
         if new_desc:

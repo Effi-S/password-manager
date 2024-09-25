@@ -132,21 +132,14 @@ def view(key, description: Optional[str]):
 
 @cli.command()
 @click.option(
-    "--key",
-    prompt=False,
-    hide_input=True,
-    callback=check_key_file,
-    help="Master password key",
-)
-@click.option(
     "--description",
     required=False,
     help="The name to update\nIf you want to Update the name itself, "
     "first provide the name and then the updated name",
 )
-@click.option("--password", is_flag=True, prompt=False)
+@click.option("--password", prompt=False)
 @click.option("--username", prompt=False)
-def update(key: bytes, description: tuple[str], password: bool, username: str):
+def update(description: tuple[str], password: str, username: str):
     """Update an existing password"""
     if not description:
         description = choose_description()
@@ -154,15 +147,10 @@ def update(key: bytes, description: tuple[str], password: bool, username: str):
     # if n := len(description) > 2:
     #     raise click.ClickException("--description excepts 1 or 2 values.")
 
-    # TODO: Allow user password
-    if password:
-        pm = PasswordManager(key=key)
-        password = pm.encrypt(create_password())
-
     db = Database()
     db.update(
         description=description,
-        password=password,
+        encrypted_password=password,
         new_desc=None,  # TODO
         username=username,
     )
@@ -182,6 +170,33 @@ def delete(description: Optional[str]):
     names = db.get_names()
     click.echo("Left:\n  ", nl=False)
     click.echo("\n  ".join(f"({i}) - {name}" for i, name in enumerate(names)))
+
+
+@cli.command()
+@click.option(
+    "--key",
+    prompt=False,
+    hide_input=True,
+    callback=check_key_file,
+    help="Master password key",
+)
+@click.option(
+    "description",
+    "--description",
+    required=False,
+    help="The name to Rotate",
+)
+def rotate(key: bytes, description: Optional[str]):
+    """Create a new encrypted password, replacing the old one"""
+    description = description or choose_description()
+    pm = PasswordManager(key=key)
+    password = pm.encrypt(create_password())
+
+    db = Database()
+    db.update(
+        description=description,
+        encrypted_password=password,
+    )
 
 
 if __name__ == "__main__":
