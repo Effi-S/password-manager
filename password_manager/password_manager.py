@@ -59,7 +59,7 @@ class PasswordManager:
 
     @staticmethod
     def generate_key() -> bytes:
-        return os.urandom(32)
+        return os.urandom(64)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,8 @@ from password_manager.password_manager import PasswordManager
 
 KEYFILE = Path(__file__).parent / ".key"
 PASS_LENGTH = 12
-CHARS = string.ascii_letters + string.digits + "!#$%&*+-/:;<=>@[]^_`{|}~"
+PUNCTUATION = "!#&*+-/:;<=>@[]^_`{|}~"
+CHARS = string.ascii_letters + string.digits + PUNCTUATION
 
 
 @click.group()
@@ -31,7 +32,17 @@ def check_key_file(ctx, param, value):
 
 
 def create_password(ctx, param, value):
-    return "".join(secrets.choice(CHARS) for _ in range(PASS_LENGTH))
+    if value:
+        return value
+    password = [
+        secrets.choice(string.ascii_lowercase),
+        secrets.choice(string.ascii_uppercase),
+        secrets.choice(string.digits),
+        secrets.choice(PUNCTUATION),
+    ]
+    password += [secrets.choice(CHARS) for _ in range(PASS_LENGTH - 4)]
+
+    return "".join(password)
 
 
 @cli.command()
