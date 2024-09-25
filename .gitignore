@@ -1,3 +1,4 @@
 .venv/
 .key
 password_manager/.passwords.db
+__pycache__
