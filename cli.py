@@ -1,5 +1,5 @@
-import getpass
-import os
+import secrets
+import string
 from pathlib import Path
 from typing import Optional
 
@@ -9,6 +9,8 @@ from password_manager.database import Database
 from password_manager.password_manager import PasswordManager
 
 KEYFILE = Path(__file__).parent / ".key"
+PASS_LENGTH = 12
+CHARS = string.ascii_letters + string.digits + "!#$%&*+-/:;<=>@[]^_`{|}~"
 
 
 @click.group()
@@ -17,7 +19,7 @@ def cli():
 
 
 def check_key_file(ctx, param, value):
-    # TODO: Make this Secure
+    # FIXME: Make this Secure with Keystore
     # TODO: Handle key Rotation
     if not KEYFILE.exists():
         KEYFILE.touch()
@@ -26,6 +28,10 @@ def check_key_file(ctx, param, value):
         key = PasswordManager.generate_key()
         KEYFILE.write_bytes(key)
     return key
+
+
+def create_password(ctx, param, value):
+    return "".join(secrets.choice(CHARS) for _ in range(PASS_LENGTH))
 
 
 @cli.command()
@@ -51,10 +57,10 @@ def check_key_file(ctx, param, value):
 )
 @click.option(
     "--password",
-    prompt=True,
-    confirmation_prompt=True,
+    prompt=False,
     hide_input=True,
-    help="Master password key",
+    callback=create_password,
+    help="Password to create",
 )
 def add(key: bytes, description: str, username: Optional[str], password: str):
     """Add a new Password"""
