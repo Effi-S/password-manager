@@ -8,59 +8,43 @@ class Database:
         self.session = Session()
 
     def add_password(
-        self,
-        *,
-        description: str,
-        username: Optional[str] = None,
-        encrypted_password: str
+        self, *, name: str, username: Optional[str] = None, encrypted_password: str
     ):
         new_entry = Password(
-            description=description,
+            name=name,
             username=username,
             encrypted_password=encrypted_password,
         )
         self.session.add(new_entry)
         self.session.commit()
 
-    def get(self, description: str) -> Password:
-        return (
-            self.session.query(Password)
-            .filter(Password.description == description)
-            .first()
-        )
+    def get(self, name: str) -> Password:
+        return self.session.query(Password).filter(Password.name == name).first()
 
     def get_names(self) -> list[str]:
-        return [x.description for x in self.session.query(Password).all()]
+        return [x.name for x in self.session.query(Password).all()]
 
     def update(
         self,
-        description: str,
-        new_desc: str = None,
+        name: str,
+        new_name: str = None,
         encrypted_password: str = None,
         username: str = None,
     ):
-        if not any((new_desc, encrypted_password, username)):
+        if not any((new_name, encrypted_password, username)):
             raise ValueError("Nothing was provided to Update")
 
-        item = (
-            self.session.query(Password)
-            .filter(Password.description == description)
-            .first()
-        )
+        item = self.session.query(Password).filter(Password.name == name).first()
 
         if encrypted_password:
             item.encrypted_password = encrypted_password
         if username:
             item.username = username
-        if new_desc:
-            item.description = new_desc
+        if new_name:
+            item.name = new_name
         self.session.commit()
 
-    def delete(self, description: str):
-        for item in (
-            self.session.query(Password)
-            .filter(Password.description == description)
-            .all()
-        ):
+    def delete(self, name: str):
+        for item in self.session.query(Password).filter(Password.name == name).all():
             self.session.delete(item)
         self.session.commit()

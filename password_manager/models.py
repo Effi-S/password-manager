@@ -12,7 +12,7 @@ class Password(Base):
     __tablename__ = "passwords"
 
     id = Column(Integer, primary_key=True)
-    description = Column(String, nullable=False)
+    name = Column(String, nullable=False)
     username = Column(String, nullable=True)
     encrypted_password = Column(String, nullable=False)
 
