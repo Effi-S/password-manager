@@ -102,10 +102,9 @@ def add(
 def view(key, name: Optional[str], db: Database = None):
     """View existing passwords"""
     db = db or Database()
-    manager = PasswordManager(key)
+    name = name or choose_name(db=db)
 
-    if not name:
-        name = choose_name(db=db)
+    manager = PasswordManager(key)
 
     entry = db.get(name=name)
     decrypted_pw = manager.decrypt(entry.encrypted_password)
@@ -127,9 +126,8 @@ def view(key, name: Optional[str], db: Database = None):
 def update(name: tuple[str], password: str, username: str, db: Database = None):
     """Update an existing password"""
     db = db or Database()
+    name = name or choose_name()
 
-    if not name:
-        name = choose_name()
     # TODO: Allow Name Update
     # if n := len(name) > 2:
     #     raise click.ClickException("--name excepts 1 or 2 values.")
