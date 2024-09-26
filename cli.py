@@ -11,7 +11,7 @@ def cli(): ...
 
 
 def check_key_file(ctx, param, value):
-    return PasswordManager.retrieve_key_from_file()
+    return value or PasswordManager.retrieve_key_from_file()
 
 
 def _create_password(ctx=None, param=None, value=None):

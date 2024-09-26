@@ -12,7 +12,7 @@ def choose_name(db: Database):
     """Prompts the user to choose 1 of the items in the DB"""
     names = db.get_names()
     choice = st.selectbox(
-        "Please choose:", options=[f"{i} - {name}" for i, name in enumerate(names)]
+        "Please choose Name:", options=[f"{i} - {name}" for i, name in enumerate(names)]
     )
     if choice:
         name = names[int(choice.split(" - ")[0])]
@@ -48,11 +48,7 @@ if choice == "Add":
 
 elif choice == "View":
     st.header("View existing passwords")
-    name = st.text_input(
-        "What to call the password (leave blank to choose from list)", key="view_name"
-    )
-    if not name:
-        name = choose_name(db)
+    name = choose_name(db)
 
     if st.button("View Password") and name:
         manager = PasswordManager(key)
@@ -67,25 +63,20 @@ elif choice == "View":
 
 elif choice == "Update":
     st.header("Update an existing password")
-    name = st.text_input("The name to update", key="update_name")
+    name = choose_name(db)
     password = st.text_input(
         "New password (optional)", type="password", key="update_password"
     )
     username = st.text_input("New username (optional)", key="update_username")
 
     if st.button("Update Password"):
-        if not name:
-            name = choose_name(db)
         db.update(name=name, encrypted_password=password, username=username)
         st.success(f"Updated {name}!")
 
 elif choice == "Delete":
     st.header("Delete an Entry in its entirety")
-    name = st.text_input("The name to delete", key="delete_name")
-
+    name = choose_name(db)
     if st.button("Delete Password"):
-        if not name:
-            name = choose_name(db)
         db.delete(name)
         names = db.get_names()
         st.write("Remaining passwords:")
@@ -94,11 +85,8 @@ elif choice == "Delete":
 
 elif choice == "Rotate":
     st.header("Rotate a password")
-    name = st.text_input("The name to rotate", key="rotate_name")
-
+    name = choose_name(db)
     if st.button("Rotate Password"):
-        if not name:
-            name = choose_name(db)
         pm = PasswordManager(key=key)
         password = pm.encrypt(_create_password())
         db.update(name=name, encrypted_password=password)

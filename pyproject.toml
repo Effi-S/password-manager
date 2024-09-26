@@ -10,6 +10,7 @@ python = "^3.11"
 cryptography = "^43.0.1"
 click = "^8.1.7"
 sqlalchemy = "^2.0.35"
+streamlit = "^1.38.0"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.27.0"

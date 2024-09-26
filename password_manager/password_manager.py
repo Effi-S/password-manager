@@ -12,13 +12,14 @@ KEYFILE = Path(__file__).parent / ".key"
 
 
 MIN_PASS_LENGTH, DEFAULT_PASS_LENGTH = 5, 12
+KEYSIZE = 32
 PUNCTUATION = "!#&*+-/:;<=>@[]^_`{|}~"
 CHARS = string.ascii_letters + string.digits + PUNCTUATION
 
 
 class PasswordManager:
     def __init__(self, key: bytes):
-        if len(key) != 32:
+        if len(key) != KEYSIZE:
             raise ValueError("Key must be 32 bytes (256 bits) long.")
         self.key = key
 
@@ -69,7 +70,7 @@ class PasswordManager:
 
     @staticmethod
     def generate_key() -> bytes:
-        return os.urandom(64)
+        return os.urandom(32)
 
     @staticmethod
     def generate_password(length: int = DEFAULT_PASS_LENGTH) -> str:
@@ -89,6 +90,7 @@ class PasswordManager:
 
     @staticmethod
     def retrieve_key_from_file() -> bytes:
+        # TODO: PBKDF
         # TODO: Password lock the file
         # FIXME: Make this Secure with Keystore
         # TODO: Handle key Rotation
