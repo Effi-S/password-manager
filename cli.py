@@ -72,10 +72,12 @@ def choose_name(db: Database = None):
     callback=_create_password,
     help="Password to create",
 )
-def add(key: bytes, name: str, username: Optional[str], password: str):
+def add(
+    key: bytes, name: str, username: Optional[str], password: str, db: Database = None
+):
     """Add a new Password"""
     manager = PasswordManager(key)
-    db = Database()
+    db = db or Database()
 
     encrypted_pw = manager.encrypt(password)
 
@@ -97,11 +99,10 @@ def add(key: bytes, name: str, username: Optional[str], password: str):
     prompt=False,
     help="What to call the password",
 )
-def view(key, name: Optional[str]):
+def view(key, name: Optional[str], db: Database = None):
     """View existing passwords"""
-
+    db = db or Database()
     manager = PasswordManager(key)
-    db = Database()
 
     if not name:
         name = choose_name(db=db)
@@ -123,15 +124,16 @@ def view(key, name: Optional[str]):
 )
 @click.option("--password", prompt=False)
 @click.option("--username", prompt=False)
-def update(name: tuple[str], password: str, username: str):
+def update(name: tuple[str], password: str, username: str, db: Database = None):
     """Update an existing password"""
+    db = db or Database()
+
     if not name:
         name = choose_name()
     # TODO: Allow Name Update
     # if n := len(name) > 2:
     #     raise click.ClickException("--name excepts 1 or 2 values.")
 
-    db = Database()
     db.update(
         name=name,
         encrypted_password=password,
@@ -148,11 +150,11 @@ def update(name: tuple[str], password: str, username: str):
     required=False,
     help="The name to delete",
 )
-def delete(name: Optional[str]):
+def delete(name: Optional[str], db: Database = None):
     """Delete an Entry in it's entirety"""
     name = name or choose_name()
 
-    db = Database()
+    db = db or Database()
     db.delete(name)
     names = db.get_names()
     click.echo("Left:\n  ", nl=False)
@@ -173,13 +175,13 @@ def delete(name: Optional[str]):
     required=False,
     help="The name to Rotate",
 )
-def rotate(key: bytes, name: Optional[str]):
+def rotate(key: bytes, name: Optional[str], db: Database = None):
     """Create a new encrypted password, replacing the old one"""
     name = name or choose_name()
     pm = PasswordManager(key=key)
     password = pm.encrypt(_create_password())
 
-    db = Database()
+    db = db or Database()
     db.update(
         name=name,
         encrypted_password=password,
