@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Optional
 
 import click
@@ -6,23 +5,13 @@ import click
 from password_manager.database import Database
 from password_manager.password_manager import PasswordManager
 
-KEYFILE = Path(__file__).parent / ".key"
-
 
 @click.group()
 def cli(): ...
 
 
 def check_key_file(ctx, param, value):
-    # FIXME: Make this Secure with Keystore
-    # TODO: Handle key Rotation
-    if not KEYFILE.exists():
-        KEYFILE.touch()
-    key = KEYFILE.read_bytes().strip()
-    if not key:
-        key = PasswordManager.generate_key()
-        KEYFILE.write_bytes(key)
-    return key
+    return PasswordManager.retrieve_key_from_file()
 
 
 def _create_password(ctx=None, param=None, value=None):

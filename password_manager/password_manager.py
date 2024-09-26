@@ -2,12 +2,16 @@ import base64
 import os
 import secrets
 import string
+from pathlib import Path
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
-PASS_LENGTH = 12
+KEYFILE = Path(__file__).parent / ".key"
+
+
+MIN_PASS_LENGTH, DEFAULT_PASS_LENGTH = 5, 12
 PUNCTUATION = "!#&*+-/:;<=>@[]^_`{|}~"
 CHARS = string.ascii_letters + string.digits + PUNCTUATION
 
@@ -68,16 +72,33 @@ class PasswordManager:
         return os.urandom(64)
 
     @staticmethod
-    def generate_password() -> str:
-        password = [
-            secrets.choice(string.ascii_lowercase),
-            secrets.choice(string.ascii_uppercase),
-            secrets.choice(string.digits),
-            secrets.choice(PUNCTUATION),
-        ]
-        password += [secrets.choice(CHARS) for _ in range(PASS_LENGTH - 4)]
+    def generate_password(length: int = DEFAULT_PASS_LENGTH) -> str:
+        length = max(length, MIN_PASS_LENGTH)
+        password = "".join(
+            (
+                secrets.choice(string.ascii_lowercase),
+                secrets.choice(string.ascii_uppercase),
+                secrets.choice(string.digits),
+                secrets.choice(PUNCTUATION),
+            )
+        )
+        for _ in range(length - len(password)):
+            password += secrets.choice(CHARS)
 
-        return "".join(password)
+        return password
+
+    @staticmethod
+    def retrieve_key_from_file() -> bytes:
+        # TODO: Password lock the file
+        # FIXME: Make this Secure with Keystore
+        # TODO: Handle key Rotation
+        if not KEYFILE.exists():
+            KEYFILE.touch()
+        key = KEYFILE.read_bytes().strip()
+        if not key:
+            key = PasswordManager.generate_key()
+            KEYFILE.write_bytes(key)
+        return key
 
 
 if __name__ == "__main__":
