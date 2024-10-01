@@ -176,5 +176,34 @@ def rotate(key: bytes, name: Optional[str], db: Database = None):
     click.echo(f"{name}'s password rotated!")
 
 
+@cli.command()
+@click.option(
+    "--key",
+    prompt=False,
+    hide_input=True,
+    callback=check_key_file,
+    help="Master password key",
+)
+@click.option(
+    "--name",
+    "--title",
+    prompt=False,
+    help="What to call the password",
+)
+def copy(key, name: Optional[str], db: Database = None):
+    """Copy existing password to clipboard"""
+    import pyperclip
+
+    db = db or Database()
+    name = name or choose_name(db=db)
+
+    manager = PasswordManager(key)
+
+    entry = db.get(name=name)
+    decrypted_pw = manager.decrypt(entry.encrypted_password)
+    pyperclip.copy(decrypted_pw)
+    click.echo(f"`{name}` password copied to clipboard!")
+
+
 if __name__ == "__main__":
     cli()

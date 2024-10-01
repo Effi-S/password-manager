@@ -1,3 +1,6 @@
+from functools import partial
+
+import pyperclip
 import streamlit as st
 
 from password_manager.database import Database
@@ -8,24 +11,30 @@ def _create_password():
     return PasswordManager.generate_password()
 
 
+def copy_to_clipboard(text: str):
+    pyperclip.copy(text)
+
+
 def choose_name(db: Database):
     """Prompts the user to choose 1 of the items in the DB"""
     names = db.get_names()
-    choice = st.selectbox(
-        "Please choose Name:", options=[f"{i} - {name}" for i, name in enumerate(names)]
-    )
-    if choice:
-        name = names[int(choice.split(" - ")[0])]
+    name = st.selectbox("Please choose Name:", options=names)
+    if name:
         st.write(f"You selected: {name}")
         return name
     return None
 
 
 # Streamlit App
-st.title("Password Manager")
+st.sidebar.write("# Password Manager", anchor="top")
 
-choice = st.sidebar.selectbox(
-    "Choose an action", ["Add", "View", "Update", "Delete", "Rotate"]
+choice = st.sidebar.radio(
+    "Choose an action",
+    options=["Add", "View", "Update", "Delete", "Rotate"],
+    horizontal=True,
+)
+master_password = st.sidebar.text_input(
+    "Master Password", value="***", type="password", key="master-password"
 )
 
 key = PasswordManager.retrieve_key_from_file()
@@ -33,7 +42,7 @@ key = PasswordManager.retrieve_key_from_file()
 db = Database()
 
 if choice == "Add":
-    st.header("Add a new Password")
+    st.subheader("Add a new Password")
     name = st.text_input("What to call the password", key="name")
     username = st.text_input("Username (optional)", key="username")
     password = st.text_input(
@@ -47,7 +56,7 @@ if choice == "Add":
         st.success("Password saved!")
 
 elif choice == "View":
-    st.header("View existing passwords")
+    st.subheader("View existing passwords")
     name = choose_name(db)
 
     if st.button("View Password") and name:
@@ -56,13 +65,13 @@ elif choice == "View":
         if entry:
             decrypted_pw = manager.decrypt(entry.encrypted_password)
             st.write(f"Name: {entry.name}")
-            st.write(f"Username: {entry.username}")
-            st.write(f"Password: {decrypted_pw}")
-        else:
-            st.error("No such password found.")
+            if entry.username:
+                st.write(f"Username: {entry.username}")
+            st.text_input(label="Password:", value=decrypted_pw, type="password")
+            st.button(label="Copy", on_click=partial(copy_to_clipboard, decrypted_pw))
 
 elif choice == "Update":
-    st.header("Update an existing password")
+    st.subheader("Update an existing password")
     name = choose_name(db)
     password = st.text_input(
         "New password (optional)", type="password", key="update_password"
@@ -74,7 +83,7 @@ elif choice == "Update":
         st.success(f"Updated {name}!")
 
 elif choice == "Delete":
-    st.header("Delete an Entry in its entirety")
+    st.subheader("Delete an Entry in its entirety")
     name = choose_name(db)
     if st.button("Delete Password"):
         db.delete(name)
@@ -84,10 +93,12 @@ elif choice == "Delete":
             st.write(f"({i}) - {name}")
 
 elif choice == "Rotate":
-    st.header("Rotate a password")
+    st.subheader("Rotate a password")
     name = choose_name(db)
     if st.button("Rotate Password"):
         pm = PasswordManager(key=key)
         password = pm.encrypt(_create_password())
         db.update(name=name, encrypted_password=password)
         st.success(f"{name}'s password rotated!")
+
+st.sidebar.divider()
