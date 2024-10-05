@@ -48,3 +48,6 @@ class Database:
         for item in self.session.query(Password).filter(Password.name == name).all():
             self.session.delete(item)
         self.session.commit()
+
+    def get_all(self):
+        return self.session.query(Password).all()
