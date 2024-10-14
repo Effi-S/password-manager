@@ -4,6 +4,7 @@ import secrets
 import string
 from pathlib import Path
 
+import dotenv
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -20,7 +21,7 @@ CHARS = string.ascii_letters + string.digits + PUNCTUATION
 class PasswordManager:
     def __init__(self, key: bytes):
         if len(key) != KEYSIZE:
-            raise ValueError("Key must be 32 bytes (256 bits) long.")
+            raise ValueError(f"Key must be 32 bytes (256 bits) long. not {len(key)}")
         self.key = key
 
     def encrypt(self, data: str) -> str:
@@ -90,17 +91,17 @@ class PasswordManager:
 
     @staticmethod
     def retrieve_key_from_file() -> bytes:
-        # TODO: PBKDF
-        # TODO: Password lock the file
+        # TODO: Argon2 for PBKDF / Password lock the file
         # FIXME: Make this Secure with Keystore
         # TODO: Handle key Rotation
         if not KEYFILE.exists():
             KEYFILE.touch()
-        key = KEYFILE.read_bytes().strip()
+        key = dotenv.get_key(KEYFILE, "key", encoding="utf-8")
         if not key:
             key = PasswordManager.generate_key()
-            KEYFILE.write_bytes(key)
-        return key
+            key = base64.b64encode(key).decode("utf-8")
+            dotenv.set_key(KEYFILE, "key", key, quote_mode="never")
+        return base64.b64decode(key)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 from functools import partial
+from pathlib import Path
 
 import streamlit as st
 
@@ -131,3 +132,9 @@ with view_tab:
                             st.success(f"Deleted {entry.name}!")
                             st.session_state.password_entries = db.get_all()
                             st.rerun()
+
+
+def script_endpoint():
+    import subprocess
+
+    subprocess.run(["streamlit", "run", str(Path(__file__).resolve())])
