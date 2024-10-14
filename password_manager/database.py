@@ -45,9 +45,10 @@ class Database:
         self.session.commit()
 
     def delete(self, name: str):
-        for item in self.session.query(Password).filter(Password.name == name).all():
+        item = self.session.query(Password).filter(Password.name == name).first()
+        if item:
             self.session.delete(item)
-        self.session.commit()
+            self.session.commit()
 
     def get_all(self):
         return self.session.query(Password).all()
