@@ -5,6 +5,8 @@ import click
 from password_manager.database import Database
 from password_manager.password_manager import PasswordManager
 
+# TODO: service layer
+
 
 @click.group()
 def cli(): ...

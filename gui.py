@@ -98,7 +98,7 @@ with view_tab:
                         copy_to_clipboard,
                         st.session_state[f"display_password_value_{i}"],
                     ),
-                    key=f"copy_{entry.name}",
+                    key=f"copy_{i}",
                 )
 
                 if st.button("Rotate Password", key=f"rotate_button_{i}"):
@@ -122,7 +122,7 @@ with view_tab:
                         st.success(f"Updated {entry.name}!")
                         st.session_state.password_entries = db.get_all()
 
-                if st.button("Delete Password", key=f"delete_button_{entry.name}"):
+                if st.button("Delete Password", key=f"delete_button_{i}"):
                     with st.spinner("Processing..."):
                         try:
                             db.delete(entry.name)
