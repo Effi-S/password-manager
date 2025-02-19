@@ -26,13 +26,18 @@ def choose_name(db: Database = None):
     """prompts the user to choose 1 of the items in the DB"""
     db = db or Database()
     names = db.get_names()
+    if not names:
+        raise click.ClickException("Empty! Use `add` first.")
     s = "\n  ".join(f"{i} - {name}" for i, name in enumerate(names))
     choice = click.prompt(
         f"Please choose:\n  {s}\n",
-        type=click.Choice(list(map(str, range(len(names)))), case_sensitive=False),
+        type=click.Choice(
+            list(map(str, range(len(names)))) + names, case_sensitive=False
+        ),
+        show_choices=False,
     )
-    name = names[int(choice)]
-    click.echo(f"You selected: ({choice}) {name}")
+    name = names[int(choice)] if choice.isnumeric() else choice
+    click.echo(f"You selected: {name}")
     return name
 
 
@@ -85,10 +90,11 @@ def add(
     help="Master password key",
 )
 @click.option(
+    "name",
     "--name",
     "--title",
     prompt=False,
-    help="What to call the password",
+    help="Name of the password to view",
 )
 def view(key, name: Optional[str], db: Database = None):
     """View existing passwords"""
@@ -98,6 +104,15 @@ def view(key, name: Optional[str], db: Database = None):
     manager = PasswordManager(key)
 
     entry = db.get(name=name)
+
+    if not entry:
+        click.echo(
+            f"Name: {name} does not exist!\nChoose on of:\n{' '.join(db.get_names())}"
+        )
+        return
+    # import IPython
+    # IPython.embed(colors="Neutral")
+
     decrypted_pw = manager.decrypt(entry.encrypted_password)
     click.echo(
         f"Name: {entry.name}\nUsername: {entry.username}\nPassword: {decrypted_pw}"
@@ -166,11 +181,11 @@ def delete(name: Optional[str], db: Database = None):
 )
 def rotate(key: bytes, name: Optional[str], db: Database = None):
     """Create a new encrypted password, replacing the old one"""
-    name = name or choose_name()
+    db = db or Database()
+    name = name or choose_name(db=db)
     pm = PasswordManager(key=key)
     password = pm.encrypt(_create_password())
 
-    db = db or Database()
     db.update(
         name=name,
         encrypted_password=password,
@@ -196,13 +211,18 @@ def copy(key, name: Optional[str], db: Database = None):
     """Copy existing password to clipboard"""
     import pyperclip
 
-    db = db or Database()
-    name = name or choose_name(db=db)
+    name = name or choose_name()
+    pm = PasswordManager(key=key)
 
-    manager = PasswordManager(key)
+    db = db or Database()
 
     entry = db.get(name=name)
-    decrypted_pw = manager.decrypt(entry.encrypted_password)
+    if not entry:
+        click.echo(
+            f"Name: {name} does not exist!\nChoose on of:\n{' '.join(db.get_names())}"
+        )
+        return
+    decrypted_pw = pm.decrypt(entry.encrypted_password)
     pyperclip.copy(decrypted_pw)
     click.echo(f"`{name}` password copied to clipboard!")
 

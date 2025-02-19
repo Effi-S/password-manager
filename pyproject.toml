@@ -19,6 +19,7 @@ ipython = "^8.27.0"
 isort = "^5.13.2"
 black = "^24.8.0"
 pytest = "^8.3.3"
+pylint = "^3.3.1"
 
 [build-system]
 requires = ["poetry-core"]

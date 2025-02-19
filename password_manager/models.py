@@ -1,8 +1,7 @@
 from pathlib import Path
 
 from sqlalchemy import Column, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 _PDB = Path(__file__).parent / ".passwords.db"
 Base = declarative_base()
@@ -20,3 +19,10 @@ class Password(Base):
 engine = create_engine(f"sqlite:///{_PDB}")
 Session = sessionmaker(bind=engine)
 Base.metadata.create_all(engine)
+
+
+def get_test_session():
+    test_engine = create_engine(f"sqlite:///{_PDB}.test")
+    test_Session = sessionmaker(bind=test_engine)
+    Base.metadata.create_all(test_engine)
+    return test_Session()

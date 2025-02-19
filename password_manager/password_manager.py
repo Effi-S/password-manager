@@ -20,8 +20,10 @@ CHARS = string.ascii_letters + string.digits + PUNCTUATION
 
 class PasswordManager:
     def __init__(self, key: bytes):
+        if isinstance(key, str):
+            key = base64.b64decode(key)
         if len(key) != KEYSIZE:
-            raise ValueError(f"Key must be 32 bytes (256 bits) long. not {len(key)}")
+            raise ValueError(f"Key must be of length: {KEYSIZE}. not {len(key)}")
         self.key = key
 
     def encrypt(self, data: str) -> str:
@@ -29,6 +31,7 @@ class PasswordManager:
         iv = os.urandom(16)
 
         # --2-- Create Cipher and encryptor
+        print("Key:", self.key)
         cipher = Cipher(
             algorithms.AES(self.key), modes.CBC(iv), backend=default_backend()
         )
@@ -47,6 +50,8 @@ class PasswordManager:
         return base64.b64encode(encrypted_data).decode()
 
     def decrypt(self, data: str) -> str:
+        if missing_padding := len(data) % 4:
+            data += "=" * (4 - missing_padding)
         # --1-- Base64 decode
         data = base64.b64decode(data.encode())
 
@@ -71,7 +76,7 @@ class PasswordManager:
 
     @staticmethod
     def generate_key() -> bytes:
-        return os.urandom(32)
+        return base64.b64encode(os.urandom(KEYSIZE))
 
     @staticmethod
     def generate_password(length: int = DEFAULT_PASS_LENGTH) -> str:
@@ -98,8 +103,7 @@ class PasswordManager:
             KEYFILE.touch()
         key = dotenv.get_key(KEYFILE, "key", encoding="utf-8")
         if not key:
-            key = PasswordManager.generate_key()
-            key = base64.b64encode(key).decode("utf-8")
+            key = PasswordManager.generate_key().decode("utf-8")
             dotenv.set_key(KEYFILE, "key", key, quote_mode="never")
         return base64.b64decode(key)
 

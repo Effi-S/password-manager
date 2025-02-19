@@ -1,11 +1,17 @@
+import os
 from typing import Optional
 
-from password_manager.models import Password, Session
+import dotenv
+
+from password_manager.models import Password, Session, get_test_session
+
+dotenv.load_dotenv()
 
 
 class Database:
-    def __init__(self):
-        self.session = Session()
+    def __init__(self, test: bool = False):
+        self.test_mode = test or os.environ.get("TEST_DATABASE")
+        self.session = Session() if not self.test_mode else get_test_session()
 
     def add_password(
         self, *, name: str, username: Optional[str] = None, encrypted_password: str
